@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Fridge Detail{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center text-primary">{{ fridge.name }}</h2>
+
+<!-- Форма фильтрации по датам -->
+<div class="mb-4 text-center">
+    <form method="get" class="d-inline-flex align-items-center">
+        <label for="start_date" class="me-2">From:</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="form-control me-3">
+
+        <label for="end_date" class="me-2">To:</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="form-control me-3">
+
+        <button type="submit" class="btn btn-success">Отфильтровать</button>
+    </form>
+</div>
+
+<!-- Таблица для отображения температурных записей -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>Температура датчика 1 (°C)</th>
+            <th>Температура датчика 2 (°C)</th>
+            <th>Дата события</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for record in records %}
+        <tr class="{% if record.is_out_of_range %}table-danger{% endif %}">
+            <td>{{ record.sensor1_temp }}°C</td>
+            <td>{{ record.sensor2_temp }}°C</td>
+            <td>{{ record.event_date|date:"Y-m-d H:i" }}</td> <!-- Форматируем дату -->
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" class="text-center">No records found for the selected date range.</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

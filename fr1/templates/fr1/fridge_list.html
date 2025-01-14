@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Список холодильников{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center text-primary">Холодильное оборудование в цеху</h2>
+<div class="row">
+    {% for fridge in fridges %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-lg" style="background-color: #f8f9fa;">
+            <img src="{{ fridge.image.url }}" class="card-img-top" alt="{{ fridge.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ fridge.name }}</h5>
+                <p class="card-text">{{ fridge.location }}</p>
+                <!-- Ссылка на детальную страницу холодильника -->
+                <a href="{% url 'fridge_detail' fridge.id %}" class="btn btn-primary">Посмотреть детали</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No fridges available.</p>
+    {% endfor %}
+</div>
+{% endblock %}

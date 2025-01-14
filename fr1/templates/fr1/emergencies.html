@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4 text-center text-danger">Аварийные случаи</h2>
+
+<!-- Форма фильтрации по дате -->
+<div class="mb-4 text-center">
+    <form method="get" class="d-inline-flex align-items-center">
+        <label for="start_date" class="me-2">С:</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="form-control me-3">
+
+        <label for="end_date" class="me-2">До:</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="form-control me-3">
+
+        <button type="submit" class="btn btn-warning">Отфильтровать</button>
+    </form>
+</div>
+
+<!-- Таблица для отображения аварийных ситуаций -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>Холодильник</th>
+            <th>Температура 1 (°C)</th>
+            <th>Температура 2 (°C)</th>
+            <th>Дата события</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for record in emergency_records %}
+        <tr class="table-danger">
+            <td>{{ record.fridge.name }}</td>
+            <td>{{ record.sensor1_temp }}</td>
+            <td>{{ record.sensor2_temp }}</td>
+            <td>{{ record.event_date|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">Нет аварийных ситуаций на выбранную дату.</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

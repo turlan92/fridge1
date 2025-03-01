@@ -1,20 +1,19 @@
+from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import RefrigeratorData
-from .serializers import RefrigeratorDataSerializer
 from django.shortcuts import render, get_object_or_404
-from .models import Fridge, RefrigeratorData
 from django.utils.dateparse import parse_date
-from django.shortcuts import render
 from django.utils import timezone
 from datetime import datetime
+import requests
 from .models import RefrigeratorData
+import socket
+import errno
 
 
-def index(request):
-    # Здесь можно передать данные, если они нужны для отображения
-    return render(request, 'fr1/index.html')
+from .models import Fridge
+from .serializers import RefrigeratorDataSerializer
 
 
 def fridge_list(request):
@@ -24,20 +23,20 @@ def fridge_list(request):
 
 def fridge_detail(request, fridge_id):
     fridge = get_object_or_404(Fridge, id=fridge_id)
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
 
-    # Фильтрация по датам, если они есть
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    start_date = parse_date(start_date_str) if start_date_str else None
+    end_date = parse_date(end_date_str) if end_date_str else None
+
     filters = {}
     if start_date:
-        start_date = parse_date(start_date)
         filters['event_date__gte'] = datetime.combine(start_date, datetime.min.time())
     if end_date:
-        end_date = parse_date(end_date)
         filters['event_date__lte'] = datetime.combine(end_date, datetime.max.time())
 
-    # Получаем связанные данные о температуре
-    records = RefrigeratorData.objects.filter(fridge=fridge, **filters)
+    records = RefrigeratorData.objects.filter(fridge=fridge, **filters).order_by('-event_date')[:100]
 
     return render(request, 'fr1/fridge_detail.html', {
         'fridge': fridge,
@@ -48,68 +47,97 @@ def fridge_detail(request, fridge_id):
 
 
 def daily_temperatures(request):
-    # Получаем строки дат из GET параметров или текущие даты по умолчанию
     start_date_str = request.GET.get('start_date', timezone.now().strftime('%Y-%m-%d'))
     end_date_str = request.GET.get('end_date', timezone.now().strftime('%Y-%m-%d'))
 
     try:
-        # Преобразуем строки в объекты datetime
-        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%d')
-        end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%d')
-        # Делаем datetime с учетом часового пояса
-        start_date_obj = timezone.make_aware(start_date_obj)
-        end_date_obj = timezone.make_aware(end_date_obj.replace(hour=23, minute=59, second=59, microsecond=999999))
+        start_date_obj = timezone.make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+        end_date_obj = timezone.make_aware(datetime.strptime(end_date_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
     except ValueError:
-        # Если дата некорректна, используем текущую дату
         start_date_obj = timezone.now()
         end_date_obj = timezone.now()
 
-    # Фильтрация данных по дате, с сортировкой по последним записям
     records = RefrigeratorData.objects.filter(
-        event_date__gte=start_date_obj,
-        event_date__lte=end_date_obj
-    ).select_related('fridge').order_by('-event_date')  # сортировка по убыванию даты
+        event_date__range=(start_date_obj, end_date_obj)
+    ).select_related('fridge').order_by('-event_date')[:100]
 
-    # Передаем данные в шаблон
     return render(request, 'fr1/daily_temperatures.html', {
         'records': records,
         'start_date': start_date_obj.date(),
-        'end_date': end_date_obj.date(),
+        'end_date': end_date_obj.date()
     })
 
 
 def emergencies(request):
-    # Получаем параметры фильтрации по датам из GET запроса
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
 
-    # Формируем фильтры по дате, если они переданы
+    start_date = parse_date(start_date_str) if start_date_str else None
+    end_date = parse_date(end_date_str) if end_date_str else None
+
     filters = {}
     if start_date:
-        start_date = parse_date(start_date)
-        filters['event_date__gte'] = datetime.combine(start_date, datetime.min.time())  # начало дня
+        filters['event_date__gte'] = datetime.combine(start_date, datetime.min.time())
     if end_date:
-        end_date = parse_date(end_date)
-        filters['event_date__lte'] = datetime.combine(end_date, datetime.max.time())  # конец дня
+        filters['event_date__lte'] = datetime.combine(end_date, datetime.max.time())
 
-    # Фильтруем данные по аварийности и дате, с сортировкой по последним записям
-    emergency_records = RefrigeratorData.objects.filter(
-        is_out_of_range=True,
-        **filters
-    ).select_related('fridge').order_by('-event_date')  # сортировка по убыванию даты
+    emergency_records = RefrigeratorData.objects.filter(is_out_of_range=True, **filters)
+    emergency_records = emergency_records.select_related('fridge').order_by('-event_date')[:100]
 
     return render(request, 'fr1/emergencies.html', {
         'emergency_records': emergency_records,
         'start_date': start_date,
-        'end_date': end_date,
+        'end_date': end_date
     })
+
+
+TELEGRAM_BOT_TOKEN = "7810947449:AAE8rrec0vQDfHV9xeKHuenHI80dY6bN5eQ"
+TELEGRAM_CHAT_ID = "-1002397603186"
+
+def send_telegram_message(message):
+    """Отправляет сообщение в Telegram"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
+        return None
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Проверка ошибок HTTP
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Ошибка отправки в Telegram: {e}")
+        return None
 
 
 @api_view(['POST'])
 def create_refrigerator_data(request):
-    if request.method == 'POST':
-        serializer = RefrigeratorDataSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    """Принимает данные, сохраняет их и отправляет уведомление при аварийной температуре"""
+    serializer = RefrigeratorDataSerializer(data=request.data)
+
+    if serializer.is_valid():
+        fridge = get_object_or_404(Fridge, id=request.data.get('fridge'))
+        record = serializer.save(fridge=fridge)
+
+        # Проверяем аварийную температуру
+        if getattr(record, "is_out_of_range", False):
+            message = (
+                f"🚨 Аварийная температура в {fridge.name}!\n"
+                f"🌡 Датчик 1: {record.sensor1_temp}°C\n"
+                f"🌡 Датчик 2: {record.sensor2_temp}°C"
+            )
+            send_telegram_message(message)
+
+        try:
+            return Response({'message': 'Данные успешно сохранены!'}, status=status.HTTP_201_CREATED)
+        except socket.error as e:
+            if e.errno != errno.EPIPE:
+                raise  # Пробрасываем, если это не Broken pipe
+
+    try:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except socket.error as e:
+        if e.errno != errno.EPIPE:
+            raise

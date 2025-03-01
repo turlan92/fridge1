@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.timezone import now
 
 class Fridge(models.Model):
     name = models.CharField(max_length=100)  # Название холодильника
@@ -9,11 +10,11 @@ class Fridge(models.Model):
         return self.name
 
 class RefrigeratorData(models.Model):
-    fridge = models.ForeignKey(Fridge, on_delete=models.CASCADE, related_name='temperature_records')  # Связь с холодильником
-    sensor1_temp = models.FloatField()  # Температура с датчика 1
-    sensor2_temp = models.FloatField()  # Температура с датчика 2
-    is_out_of_range = models.BooleanField()  # Булевое значение аварийности
-    event_date = models.DateTimeField()  # Дата и время события
+    fridge = models.ForeignKey(Fridge, on_delete=models.CASCADE, related_name='temperature_records')
+    sensor1_temp = models.FloatField()
+    sensor2_temp = models.FloatField()
+    is_out_of_range = models.BooleanField()
+    event_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.fridge.name} ({self.event_date})"

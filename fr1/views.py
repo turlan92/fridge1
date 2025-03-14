@@ -91,9 +91,6 @@ def emergencies(request):
     })
 
 
-TELEGRAM_BOT_TOKEN = "7810947449:AAE8rrec0vQDfHV9xeKHuenHI80dY6bN5eQ"
-TELEGRAM_CHAT_ID = "-1002397603186"
-
 def send_telegram_message(message):
     """Отправляет сообщение в Telegram"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:

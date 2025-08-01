@@ -127,3 +127,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = '/home/turlan91/fridge/media/fridges'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # или больше, сколько нужно
+
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Refrigerator.settings')

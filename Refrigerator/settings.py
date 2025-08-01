@@ -130,3 +130,5 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # или больше, сколько н�
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Refrigerator.settings')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

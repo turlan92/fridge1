@@ -13,13 +13,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(7k!0hn8#y+ml%!+y0uj*g5r2mqee_xl1^#+$cq$0jmqq6&16&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    "turlan91.pythonanywhere.com",
-    "10.0.4.226",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = ['*']
+
 
 
 INTERNAL_IPS = [
@@ -128,3 +125,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/home/turlan91/fridge/media/fridges'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # или больше, сколько нужно

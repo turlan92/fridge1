@@ -9,12 +9,19 @@ class Fridge(models.Model):
     def __str__(self):
         return self.name
 
+
+
+
 class RefrigeratorData(models.Model):
     fridge = models.ForeignKey(Fridge, on_delete=models.CASCADE, related_name='temperature_records')
     sensor1_temp = models.FloatField()
     sensor2_temp = models.FloatField()
     is_out_of_range = models.BooleanField()
-    event_date = models.DateTimeField(auto_now_add=True)
+    door_open_duration_sec = models.IntegerField(null=True, blank=True)
+    power_lost = models.BooleanField(null=True, blank=True)
+    humidity = models.FloatField(null=True, blank=True)
+    air_temp = models.FloatField(null=True, blank=True)
+    event_date = models.DateTimeField()
 
     def __str__(self):
         return f"{self.fridge.name} ({self.event_date})"

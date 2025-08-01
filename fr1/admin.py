@@ -1,16 +1,24 @@
 from django.contrib import admin
 from .models import Fridge, RefrigeratorData
 
-# Настройка отображения модели Fridge в админке
 class FridgeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'location', 'image')  # Отображаемые поля
-    list_filter = ('location',)  # Фильтрация по местоположению
+    list_display = ('id', 'name', 'location', 'image')
+    list_filter = ('location',)
 
-# Настройка отображения модели RefrigeratorData в админке
 class RefrigeratorDataAdmin(admin.ModelAdmin):
-    list_display = ('id', 'fridge', 'event_date', 'sensor1_temp', 'sensor2_temp', 'is_out_of_range')  # Отображаемые поля
-    list_filter = ('event_date',)  # Фильтрация по дате события
+    list_display = (
+        'id',
+        'fridge',
+        'event_date',
+        'sensor1_temp',
+        'sensor2_temp',
+        'humidity',         # добавил
+        'air_temp',         # добавил
+        'is_out_of_range',
+        'door_open_duration_sec',  # добавил
+        'power_lost'        # добавил
+    )
+    list_filter = ('event_date', 'is_out_of_range', 'power_lost')  # добавил фильтры по новым булевым полям
 
-# Регистрация моделей в админке
 admin.site.register(Fridge, FridgeAdmin)
 admin.site.register(RefrigeratorData, RefrigeratorDataAdmin)

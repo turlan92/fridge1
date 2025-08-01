@@ -1,76 +1,65 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<h2 class="mb-4 text-center text-primary">Температурные данные по холодильникам</h2>
+{% block title %}Fridge Detail{% endblock %}
 
-<!-- Форма фильтрации по дате -->
+{% block content %}
+<h2 class="mb-4 text-center text-primary">{{ fridge.name }}</h2>
+
+<!-- Форма фильтрации по датам -->
 <div class="mb-4 text-center">
-    <form method="get" class="d-inline-flex align-items-center">
+    <form method="get" class="d-inline-flex align-items-center justify-content-center">
         <label for="start_date" class="me-2">From:</label>
-        <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="form-control me-3" required>
+        <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control me-3">
 
         <label for="end_date" class="me-2">To:</label>
-        <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="form-control me-3" required>
+        <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control me-3">
 
         <button type="submit" class="btn btn-success">Отфильтровать</button>
     </form>
 </div>
 
-<!-- Таблица для отображения температурных записей -->
+<!-- Таблица с данными -->
 <div class="table-responsive">
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
         <tr>
-            <th>Холодильник</th>
             <th>Температура датчика 1 (°C)</th>
             <th>Температура датчика 2 (°C)</th>
+            <th>Вне диапазона</th>
+            <th>Время открытия двери (сек)</th>
+            <th>Потеря питания</th>
+            <th>Влажность (%)</th>
+            <th>Температура воздуха (°C)</th>
             <th>Дата события</th>
         </tr>
         </thead>
         <tbody>
         {% for record in records %}
         <tr class="{% if record.is_out_of_range %}table-danger{% endif %}">
-            <td>{{ record.fridge.name }}</td>
             <td>{{ record.sensor1_temp }}°C</td>
             <td>{{ record.sensor2_temp }}°C</td>
+            <td>{% if record.is_out_of_range %}Да{% else %}Нет{% endif %}</td>
+            <td>{{ record.door_open_duration_sec|default:"—" }}</td>
+            <td>
+                {% if record.power_lost == True %}
+                    Да
+                {% elif record.power_lost == False %}
+                    Нет
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td>{{ record.humidity|default:"—" }}</td>
+            <td>{{ record.air_temp|default:"—" }}</td>
             <td>{{ record.event_date|date:"Y-m-d H:i" }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4" class="text-center">Записи не найдены за этот период.</td>
+            <td colspan="8" class="text-center">Записей не найдено за выбранный период.</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- Пагинация -->
 {% endblock %}
-
-<!-- Скрипт для сохранения данных формы в localStorage -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="end_date"]');
-
-        if (localStorage.getItem("start_date") !== null) {
-            startDateInput.value = localStorage.getItem("start_date");
-        }
-        if (localStorage.getItem("end_date") !== null) {
-            endDateInput.value = localStorage.getItem("end_date");
-        }
-
-        startDateInput.addEventListener("change", function() {
-            localStorage.setItem("start_date", startDateInput.value);
-        });
-
-        endDateInput.addEventListener("change", function() {
-            localStorage.setItem("end_date", endDateInput.value);
-        });
-
-        document.querySelector('form').addEventListener('submit', function() {
-            localStorage.setItem("start_date", startDateInput.value);
-            localStorage.setItem("end_date", endDateInput.value);
-        });
-    });
-</script>

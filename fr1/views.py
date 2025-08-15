@@ -126,7 +126,7 @@ def create_refrigerator_data(request):
                 f"🌡 Датчик 1: {record.sensor1_temp}°C\n"
                 f"🌡 Датчик 2: {record.sensor2_temp}°C"
             )
-            send_telegram_message(message)
+            #send_telegram_message(message)
 
         try:
             return Response({'message': 'Данные успешно сохранены!'}, status=status.HTTP_201_CREATED)

@@ -1,10 +1,8 @@
 import os.path
 from pathlib import Path
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -21,13 +19,8 @@ ALLOWED_HOSTS = [
     "localhost"
 ]
 
-
-
-
 INTERNAL_IPS = [
 ]
-
-
 
 # Application definition
 
@@ -39,13 +32,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'fr1',
-     'rest_framework',
-     'debug_toolbar',
+    'rest_framework',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -76,7 +70,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Refrigerator.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -86,7 +79,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -106,7 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -118,7 +109,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_URL = '/static/'
@@ -127,15 +117,12 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # сюда collectstatic будет собирать для продакшена
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/home/turlan91/fridge/media/fridges'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # или больше, сколько нужно
-
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Refrigerator.settings')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -145,3 +132,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://my-other-domain.com",
     "https://awake-liberation-production.up.railway.app",
 ]
+
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

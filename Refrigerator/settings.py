@@ -13,15 +13,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(7k!0hn8#y+ml%!+y0uj*g5r2mqee_xl1^#+$cq$0jmqq6&16&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
 
 
 INTERNAL_IPS = [
-    "127.0.0.1",  # Локальный адрес
-    "10.0.4.226",  # IP сервера
 ]
 
 
@@ -133,3 +131,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Refrigerator.settings')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://my-other-domain.com",
+    "https://awake-liberation-production.up.railway.app",
+]

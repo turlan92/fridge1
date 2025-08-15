@@ -91,7 +91,7 @@ def emergencies(request):
     })
 
 
-def send_telegram_message(message):
+'''def send_telegram_message(message):
     """Отправляет сообщение в Telegram"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
@@ -107,6 +107,7 @@ def send_telegram_message(message):
     except requests.RequestException as e:
         print(f"Ошибка отправки в Telegram: {e}")
         return None
+        '''
 
 
 @api_view(['POST'])

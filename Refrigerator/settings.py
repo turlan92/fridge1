@@ -118,9 +118,14 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'  # Это URL, по которому будут доступны файлы статики
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # Папка, куда будут собираться статика
-STATICFILES_DIRS = []  # Пустой список, так как уже используете STATIC_ROOT
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')  # тут твои CSS/JS/картинки
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # сюда collectstatic будет собирать для продакшена
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -89,24 +89,30 @@ def emergencies(request):
     })
 
 
-def send_telegram_message(message):
-    """Отправляет сообщение в Telegram"""
+def send_telegram_message(message: str):
+    """Отправляет сообщение в Telegram, поддерживает кириллицу и логирует результат."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
         return None
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+    data = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message
+    }
 
     try:
-        response = requests.post(url, json=data)
-        response.raise_for_status()  # Проверка ошибок HTTP
-        return response.json()
+        response = requests.post(url, json=data, timeout=10)
+        response.raise_for_status()
+        result = response.json()
+        if result.get("ok"):
+            print(f"✅ Сообщение отправлено: {message}")
+        else:
+            print(f"⚠️ Ошибка Telegram: {result}")
+        return result
     except requests.RequestException as e:
         print(f"Ошибка отправки в Telegram: {e}")
         return None
-
-
 
 @api_view(['POST'])
 def create_refrigerator_data(request):

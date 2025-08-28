@@ -26,6 +26,7 @@
             <th>Температура датчика 1 (°C)</th>
             <th>Температура датчика 2 (°C)</th>
             <th>Время открытия двери (сек)</th>
+            <th>Потеря питания</th>
             <th>Влажность (%)</th>
             <th>Температура воздуха (°C)</th>
             <th>Дата события</th>
@@ -36,7 +37,6 @@
         <tr class="{% if record.is_out_of_range %}table-danger{% endif %}">
             <td>{{ record.sensor1_temp }}°C</td>
             <td>{{ record.sensor2_temp }}°C</td>
-            <td>{% if record.is_out_of_range %}Да{% else %}Нет{% endif %}</td>
             <td>{{ record.door_open_duration_sec|default:"—" }}</td>
             <td>
                 {% if record.power_lost == True %}
@@ -53,7 +53,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" class="text-center">Записей не найдено за выбранный период.</td>
+            <td colspan="7" class="text-center">Записей не найдено за выбранный период.</td>
         </tr>
         {% endfor %}
         </tbody>

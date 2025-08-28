@@ -25,7 +25,6 @@
         <tr>
             <th>Температура датчика 1 (°C)</th>
             <th>Температура датчика 2 (°C)</th>
-            <th>Вне диапазона</th>
             <th>Время открытия двери (сек)</th>
             <th>Потеря питания</th>
             <th>Влажность (%)</th>
@@ -39,13 +38,22 @@
             <td>{{ record.sensor1_temp }}°C</td>
             <td>{{ record.sensor2_temp }}°C</td>
             <td>{{ record.door_open_duration_sec|default:"—" }}</td>
+            <td>
+                {% if record.power_lost == True %}
+                    Да
+                {% elif record.power_lost == False %}
+                    Нет
+                {% else %}
+                    —
+                {% endif %}
+            </td>
             <td>{{ record.humidity|default:"—" }}</td>
             <td>{{ record.air_temp|default:"—" }}</td>
             <td>{{ record.event_date|date:"Y-m-d H:i" }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" class="text-center">Записей не найдено за выбранный период.</td>
+            <td colspan="7" class="text-center">Записей не найдено за выбранный период.</td>
         </tr>
         {% endfor %}
         </tbody>

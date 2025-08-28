@@ -15,9 +15,36 @@ import errno
 from .models import Fridge
 from .serializers import RefrigeratorDataSerializer
 
+
 def fridge_list(request):
     fridges = Fridge.objects.all()
     return render(request, 'fr1/fridge_list.html', {'fridges': fridges})
+
+
+def fridge_detail(request, fridge_id):
+    fridge = get_object_or_404(Fridge, id=fridge_id)
+
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    start_date = parse_date(start_date_str) if start_date_str else None
+    end_date = parse_date(end_date_str) if end_date_str else None
+
+    filters = {}
+    if start_date:
+        filters['event_date__gte'] = datetime.combine(start_date, datetime.min.time())
+    if end_date:
+        filters['event_date__lte'] = datetime.combine(end_date, datetime.max.time())
+
+    records = RefrigeratorData.objects.filter(fridge=fridge, **filters).order_by('-event_date')[:100]
+
+    return render(request, 'fr1/fridge_detail.html', {
+        'fridge': fridge,
+        'records': records,
+        'start_date': start_date,
+        'end_date': end_date
+    })
+
 
 def daily_temperatures(request):
     start_date_str = request.GET.get('start_date', timezone.now().strftime('%Y-%m-%d'))
@@ -63,33 +90,11 @@ def emergencies(request):
         'end_date': end_date
     })
 
-
 TELEGRAM_BOT_TOKEN = "8031748926:AAGnjGN5qneH5w-aFg54SHCNRjBvQTJ0bXQ"
 TELEGRAM_CHAT_ID = "-1003045548424"
 
-@api_view(['POST'])
-def create_refrigerator_data(request):
-    serializer = RefrigeratorDataSerializer(data=request.data)
 
-    if serializer.is_valid():
-        fridge = get_object_or_404(Fridge, id=request.data.get('fridge'))
-        record = serializer.save(fridge=fridge)
 
-        # ✅ Отправка в Telegram только при True
-        if record.is_out_of_range:
-            message = (
-                f"🚨 Аварийная температура в {fridge.name}!\n"
-                f"🌡 Датчик 1: {record.sensor1_temp}°C\n"
-                f"🌡 Датчик 2: {record.sensor2_temp}°C"
-            )
-            send_telegram_message(message)
-
-        return Response({'message': 'Данные успешно сохранены!'}, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# Тест
-send_telegram_message("Привет, канал!")
 @api_view(['POST'])
 def create_refrigerator_data(request):
     """Принимает данные, сохраняет их и отправляет уведомление при аварийной температуре"""
@@ -119,3 +124,21 @@ def create_refrigerator_data(request):
     except socket.error as e:
         if e.errno != errno.EPIPE:
             raise
+
+def send_telegram_message(message):
+    """Отправляет сообщение в Telegram"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
+        return None
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Проверка ошибок HTTP
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Ошибка отправки в Telegram: {e}")
+        return None
+

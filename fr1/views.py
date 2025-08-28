@@ -15,6 +15,8 @@ import errno
 from .models import Fridge
 from .serializers import RefrigeratorDataSerializer
 
+TELEGRAM_BOT_TOKEN = "8031748926:AAGnjGN5qneH5w-aFg54SHCNRjBvQTJ0bXQ"
+TELEGRAM_CHAT_ID = "6388117944"  # ← вот сюда вставляем
 
 def fridge_list(request):
     fridges = Fridge.objects.all()

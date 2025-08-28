@@ -22,31 +22,27 @@ def fridge_list(request):
     fridges = Fridge.objects.all()
     return render(request, 'fr1/fridge_list.html', {'fridges': fridges})
 
+def send_telegram_message(message):
+    """Отправляет сообщение в Telegram и логирует результат"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
+        return None
 
-def fridge_detail(request, fridge_id):
-    fridge = get_object_or_404(Fridge, id=fridge_id)
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
 
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
-
-    start_date = parse_date(start_date_str) if start_date_str else None
-    end_date = parse_date(end_date_str) if end_date_str else None
-
-    filters = {}
-    if start_date:
-        filters['event_date__gte'] = datetime.combine(start_date, datetime.min.time())
-    if end_date:
-        filters['event_date__lte'] = datetime.combine(end_date, datetime.max.time())
-
-    records = RefrigeratorData.objects.filter(fridge=fridge, **filters).order_by('-event_date')[:100]
-
-    return render(request, 'fr1/fridge_detail.html', {
-        'fridge': fridge,
-        'records': records,
-        'start_date': start_date,
-        'end_date': end_date
-    })
-
+    try:
+        response = requests.post(url, json=data, timeout=10)
+        response.raise_for_status()
+        result = response.json()
+        if result.get("ok"):
+            print(f"✅ Сообщение отправлено: {message}")
+        else:
+            print(f"⚠️ Ошибка Telegram: {result}")
+        return result
+    except requests.RequestException as e:
+        print(f"Ошибка отправки в Telegram: {e}")
+        return None
 
 def daily_temperatures(request):
     start_date_str = request.GET.get('start_date', timezone.now().strftime('%Y-%m-%d'))

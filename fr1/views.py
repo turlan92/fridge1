@@ -15,34 +15,9 @@ import errno
 from .models import Fridge
 from .serializers import RefrigeratorDataSerializer
 
-TELEGRAM_BOT_TOKEN = "8031748926:AAGnjGN5qneH5w-aFg54SHCNRjBvQTJ0bXQ"
-TELEGRAM_CHAT_ID = "-1003045548424"  # ← вот сюда вставляем
-
 def fridge_list(request):
     fridges = Fridge.objects.all()
     return render(request, 'fr1/fridge_list.html', {'fridges': fridges})
-
-def send_telegram_message(message):
-    """Отправляет сообщение в Telegram и логирует результат"""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
-        return None
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
-
-    try:
-        response = requests.post(url, json=data, timeout=10)
-        response.raise_for_status()
-        result = response.json()
-        if result.get("ok"):
-            print(f"✅ Сообщение отправлено: {message}")
-        else:
-            print(f"⚠️ Ошибка Telegram: {result}")
-        return result
-    except requests.RequestException as e:
-        print(f"Ошибка отправки в Telegram: {e}")
-        return None
 
 def daily_temperatures(request):
     start_date_str = request.GET.get('start_date', timezone.now().strftime('%Y-%m-%d'))
@@ -89,21 +64,17 @@ def emergencies(request):
     })
 
 
-def send_telegram_message(message: str):
-    """Отправляет сообщение в Telegram, поддерживает кириллицу и логирует результат."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Ошибка: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не установлены!")
-        return None
+TELEGRAM_BOT_TOKEN = "8031748926:AAGnjGN5qneH5w-aFg54SHCNRjBvQTJ0bXQ"
+TELEGRAM_CHAT_ID = "-1003045548424"
 
+def send_telegram_message(message: str):
+    """Отправляет сообщение в Telegram и логирует результат"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message
-    }
+    data = {"chat_id": str(TELEGRAM_CHAT_ID), "text": message}
 
     try:
         response = requests.post(url, json=data, timeout=10)
-        response.raise_for_status()
+        print(response.text)
         result = response.json()
         if result.get("ok"):
             print(f"✅ Сообщение отправлено: {message}")
@@ -114,6 +85,8 @@ def send_telegram_message(message: str):
         print(f"Ошибка отправки в Telegram: {e}")
         return None
 
+# Тест
+send_telegram_message("Привет, канал!")
 @api_view(['POST'])
 def create_refrigerator_data(request):
     """Принимает данные, сохраняет их и отправляет уведомление при аварийной температуре"""

@@ -38,9 +38,9 @@
         <tr class="{% if record.is_out_of_range %}table-danger{% endif %}">
             <td>{{ record.sensor1_temp }}°C</td>
             <td>{{ record.sensor2_temp }}°C</td>
-            <td>{% if record.is_out_of_range %}Да{% else %}Нет{% endif %}</td>
+            {#<td>{% if record.is_out_of_range %}Да{% else %}Нет{% endif %}</td>#}
             <td>{{ record.door_open_duration_sec|default:"—" }}</td>
-            <td>
+            {#<td>
                 {% if record.power_lost == True %}
                     Да
                 {% elif record.power_lost == False %}
@@ -48,7 +48,7 @@
                 {% else %}
                     —
                 {% endif %}
-            </td>
+            </td>#}
             <td>{{ record.humidity|default:"—" }}</td>
             <td>{{ record.air_temp|default:"—" }}</td>
             <td>{{ record.event_date|date:"Y-m-d H:i" }}</td>

@@ -67,23 +67,26 @@ def emergencies(request):
 TELEGRAM_BOT_TOKEN = "8031748926:AAGnjGN5qneH5w-aFg54SHCNRjBvQTJ0bXQ"
 TELEGRAM_CHAT_ID = "-1003045548424"
 
-def send_telegram_message(message: str):
-    """Отправляет сообщение в Telegram и логирует результат"""
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {"chat_id": str(TELEGRAM_CHAT_ID), "text": message}
+@api_view(['POST'])
+def create_refrigerator_data(request):
+    serializer = RefrigeratorDataSerializer(data=request.data)
 
-    try:
-        response = requests.post(url, json=data, timeout=10)
-        print(response.text)
-        result = response.json()
-        if result.get("ok"):
-            print(f"✅ Сообщение отправлено: {message}")
-        else:
-            print(f"⚠️ Ошибка Telegram: {result}")
-        return result
-    except requests.RequestException as e:
-        print(f"Ошибка отправки в Telegram: {e}")
-        return None
+    if serializer.is_valid():
+        fridge = get_object_or_404(Fridge, id=request.data.get('fridge'))
+        record = serializer.save(fridge=fridge)
+
+        # ✅ Отправка в Telegram только при True
+        if record.is_out_of_range:
+            message = (
+                f"🚨 Аварийная температура в {fridge.name}!\n"
+                f"🌡 Датчик 1: {record.sensor1_temp}°C\n"
+                f"🌡 Датчик 2: {record.sensor2_temp}°C"
+            )
+            send_telegram_message(message)
+
+        return Response({'message': 'Данные успешно сохранены!'}, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Тест
 send_telegram_message("Привет, канал!")
